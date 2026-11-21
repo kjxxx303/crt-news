@@ -8,7 +8,7 @@ A **separate, code-only** staging repository for Premier League match news used 
 
 - Sportmonks pre-match and post-match News endpoints have been tested by the project owner: both returned HTTP 200 with Premier League data (21 November 2026).
 - The fetching and parsing tools in this repository stage articles locally, matching the Sportmonks fixture ID and retaining attribution.
-- A development-only importer can create **unpublished drafts** once the accompanying Rate X migration has been reviewed and applied on development. It does not publish, alter existing news, or touch ratings/comments.
+- A read-only development preview maps Sportmonks fixtures to rateX matches **without any schema changes**. A separate importer can create **unpublished drafts** only after the accompanying Rate X migration has been reviewed and applied on development. It does not publish, alter existing news, or touch ratings/comments.
 - Rate X's public News reader and its admin publish UI are **not** changed by this repository. The separate rateX application must implement the in-app reader and licensed publishing workflow before article bodies appear to fans.
 
 ## Requirements
@@ -30,7 +30,7 @@ node --env-file="/Users/kjx/Desktop/come rate this/.env.local" scripts/fetch-new
 # Fetch more Premier League articles
 node --env-file="/Users/kjx/Desktop/come rate this/.env.local" scripts/fetch-news.mjs --per-page 50 --pages 5
 
-# Preview which archived fixture IDs match Rate X development
+# Preview which archived fixture IDs match Rate X development (read-only; NO MIGRATION REQUIRED)
 node --env-file="/Users/kjx/Desktop/come rate this/.env.local" scripts/import-to-ratex.mjs
 
 # AFTER reviewing the schema migration and applying it to Rate X development:
