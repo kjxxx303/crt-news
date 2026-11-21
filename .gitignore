@@ -1,0 +1,8 @@
+# Credentials and locally fetched licensed news must never be committed
+.env
+.env.*
+!.env.example
+data/private/
+*.log
+.DS_Store
+node_modules/
