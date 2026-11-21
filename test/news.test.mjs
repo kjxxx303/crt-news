@@ -29,8 +29,10 @@ test("refuses wrong league, missing fixture and mismatched endpoint type", () =>
   assert.equal(parseArticle({ ...sample, lines: [] }, "postmatch").ok, false);
 });
 
-test("does not invent a date and rejects impossible dates", () => {
-  assert.equal(parseArticle({ ...sample, created_at: undefined }, "postmatch").ok, false);
+test("marks missing dates as unknown (to be labelled fixture date at import) and rejects impossible dates", () => {
+  const absent = parseArticle({ ...sample, created_at: undefined }, "postmatch");
+  assert.equal(absent.ok, true);
+  assert.equal(absent.article.articleDate, null);
   assert.equal(dateFromApi("2026-02-30T10:00:00Z"), null);
   assert.equal(dateFromApi("2026-11-08 12:00:00"), "2026-11-08");
 });
