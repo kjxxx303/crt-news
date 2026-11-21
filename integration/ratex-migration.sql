@@ -9,7 +9,8 @@ alter table public.match_news
   add column content_licence text,
   add column sportmonks_id bigint,
   add column sportmonks_fixture_id bigint,
-  add column sportmonks_type text;
+  add column sportmonks_type text,
+  add column article_date_basis text not null default 'source';
 
 -- The Sportmonks API exposes article text but does not guarantee a canonical
 -- public web URL. Our link-only news items keep their existing URLs.
@@ -21,6 +22,7 @@ alter table public.match_news
   add constraint match_news_licence_note_length check (
     content_licence is null or char_length(btrim(content_licence)) between 10 and 200
   ),
+  add constraint match_news_article_date_basis check (article_date_basis in ('source','fixture')),
   add constraint match_news_sportmonks_type check (sportmonks_type is null or sportmonks_type in ('prematch','postmatch')),
   add constraint match_news_sportmonks_positive check (sportmonks_id is null or sportmonks_id > 0),
   add constraint match_news_sportmonks_fixture_positive check (sportmonks_fixture_id is null or sportmonks_fixture_id > 0),
