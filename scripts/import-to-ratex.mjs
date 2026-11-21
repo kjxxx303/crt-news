@@ -67,7 +67,7 @@ async function matchDrafts(articles, query) {
   const matchIds = [...new Set(fixtureMap.values())];
   const matchMap = new Map();
   for (const group of chunk(matchIds, BATCH_QUERY_SIZE)) {
-    const rows = await query("matches", { select: "id,competition_id", where: [["id", "in.(" + group.join(",") + ")"]] });
+    const rows = await query("matches", { select: "id,competition_id,kickoff_at", where: [["id", "in.(" + group.join(",") + ")"]] });
     for (const row of rows) matchMap.set(row.id, row);
   }
   const competitionIds = [...new Set([...matchMap.values()].map((m) => m.competition_id))];
@@ -100,7 +100,8 @@ async function matchDrafts(articles, query) {
       body: a.body,
       url: null,
       source: "Sportmonks",
-      article_date: a.articleDate,
+      article_date: a.articleDate ?? matchMap.get(matchId).kickoff_at.slice(0, 10),
+      article_date_basis: a.articleDate ? "source" : "fixture",
       status: "draft",
       pinned: false,
       content_kind: null,
@@ -127,7 +128,7 @@ async function main() {
     typeof a.title === "string" && a.title.length >= 1 && a.title.length <= 120 &&
     typeof a.summary === "string" && a.summary.length >= 1 && a.summary.length <= 400 &&
     typeof a.body === "string" && a.body.length >= 1 && a.body.length <= 50000 &&
-    /^\d{4}-\d{2}-\d{2}$/.test(a.articleDate)
+    (a.articleDate === null || /^\d{4}-\d{2}-\d{2}$/.test(a.articleDate))
   );
   if (!valid) throw new Error("Staged articles failed validation; re-fetch them.");
   const articles = dedupeArticles(raw.articles);
