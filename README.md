@@ -51,7 +51,7 @@ The fetch step writes `data/private/premier-league-news.json`; this private loca
 - Sportmonks `fixture_id` → matching `sportmonks_fixture_archive.sm_fixture_id` → rateX `match_id`. **Never guess by headline or team names.**
 - Sportmonks `type` → `prematch` or `postmatch`.
 - `lines[].text` → plain-text body with paragraphs, ordered by the supplied line ID. No raw HTML or image copying.
-- `created_at` / `published_at` → article date when valid. An article without an API date is skipped rather than misdated.
+- `created_at` / `published_at` → article date when valid. When the API omits a timestamp, the importer uses the verified match kickoff date and records `article_date_basis = fixture` (NOT a claimed publication date). The eventual Rate X reader must label this **Match date**, not **Published**.
 - Article title and first paragraph → title and summary.
 - `source` = `Sportmonks`. No fabricated original-article URL.
 - New items always `draft`, not published, and are kept distinct from existing admin-created news.
