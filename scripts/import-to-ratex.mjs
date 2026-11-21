@@ -53,7 +53,7 @@ function makeDb({ url, key }, fetchImpl = fetch) {
   };
 }
 
-async function matchDrafts(articles, query) {
+async function matchDrafts(articles, query, { checkExisting = true } = {}) {
   const fixtureIds = [...new Set(articles.map((a) => a.fixtureId))];
   const fixtureMap = new Map();
   for (const group of chunk(fixtureIds, BATCH_QUERY_SIZE)) {
@@ -76,10 +76,14 @@ async function matchDrafts(articles, query) {
     const rows = await query("competitions", { select: "id,name,visibility", where: [["id", "in.(" + group.join(",") + ")"]] });
     for (const row of rows) competitions.set(row.id, row);
   }
+  // Existing-ID lookup requires the proposed migration. A read-only preview
+  // can match fixtures safely before any schema change has been approved.
   const existing = new Set();
-  for (const group of chunk(articles.map((a) => a.id), BATCH_QUERY_SIZE)) {
-    const rows = await query("match_news", { select: "sportmonks_id", where: [["sportmonks_id", "in.(" + group.join(",") + ")"]] });
-    for (const row of rows) existing.add(row.sportmonks_id);
+  if (checkExisting) {
+    for (const group of chunk(articles.map((a) => a.id), BATCH_QUERY_SIZE)) {
+      const rows = await query("match_news", { select: "sportmonks_id", where: [["sportmonks_id", "in.(" + group.join(",") + ")"]] });
+      for (const row of rows) existing.add(row.sportmonks_id);
+    }
   }
 
   const draftRows = [];
@@ -134,11 +138,12 @@ async function main() {
   const articles = dedupeArticles(raw.articles);
   console.log("Rate X DEVELOPMENT only (" + ALLOWED_DEV_PROJECT + "). Mode:", apply ? "APPLY drafts" : "DRY RUN (zero writes)");
   const query = makeDb(getTarget());
-  const { draftRows, skips } = await matchDrafts(articles, query);
+  const { draftRows, skips } = await matchDrafts(articles, query, { checkExisting: apply });
   console.log("Read from local file:", articles.length, "| New matched draft candidates:", draftRows.length, "| Skipped:", skips.length);
   for (const skip of skips.slice(0, 40)) console.log("SKIP", skip.id, "-", skip.reason);
   for (const row of draftRows.slice(0, 40)) console.log("DRAFT", row.sportmonks_id, row.sportmonks_type, row.sportmonks_fixture_id, row.article_date, row.title);
   if (!apply) {
+    console.log("Preview only: candidates have NOT been checked against existing Sportmonks news IDs (migration not required).");
     console.log("No database changes. After the Rate X development migration, run again with --apply to save unpublished drafts.");
     return;
   }
