@@ -39,7 +39,6 @@ export function parseArticle(input, requestedType) {
   const body = paragraphs.map((p) => p.text).join("\n\n");
   if (!body || body.length > 50000) return { ok: false, reason: "missing or excessively long body" };
   const articleDate = dateFromApi(input.published_at) ?? dateFromApi(input.created_at) ?? dateFromApi(input.updated_at);
-  if (!articleDate) return { ok: false, reason: "missing article date (not guessing)" };
   return { ok: true, article: { id, fixtureId, leagueId: PREMIER_LEAGUE_ID, type: requestedType, title, articleDate, body, summary: shortSummary(body), paragraphs: paragraphs.length } };
 }
 
@@ -53,5 +52,5 @@ export function dedupeArticles(articles) {
     }
     map.set(article.id, article);
   }
-  return [...map.values()].sort((a, b) => b.articleDate.localeCompare(a.articleDate) || b.id - a.id);
+  return [...map.values()].sort((a, b) => (b.articleDate ?? "").localeCompare(a.articleDate ?? "") || b.id - a.id);
 }
